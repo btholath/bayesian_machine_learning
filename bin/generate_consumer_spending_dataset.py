@@ -51,8 +51,7 @@ if os.path.exists(EXTRACT_DIR):
 with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
     for member in zip_ref.namelist():
         if member.endswith("/"):
-            continue  # skip directories
-        # Remove leading folder(s) like "intrvw23/"
+            continue
         flattened_name = os.path.relpath(member, start=os.path.commonpath([member, "intrvw23"]))
         target_path = os.path.join(EXTRACT_DIR, flattened_name)
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
@@ -62,9 +61,14 @@ with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
 # --- Step 4: Locate Data Files ---
 print("🔍 Scanning for FMLI and EXPN files...")
 all_csvs = glob.glob(os.path.join(EXTRACT_DIR, "**", "*.csv"), recursive=True)
+print(f"📄 Found {len(all_csvs)} CSV files")
 
+# Improved file match logic
 fmli_path = next((f for f in all_csvs if "fmli" in os.path.basename(f).lower()), None)
-expn_path = next((f for f in all_csvs if "expn" in os.path.basename(f).lower()), None)
+expn_path = next(
+    (f for f in all_csvs if any(key in os.path.basename(f).lower() for key in ["expn", "exp23"])),
+    None
+)
 
 if not fmli_path or not expn_path:
     raise FileNotFoundError("❌ Could not locate required FMLI or EXPN CSV files.")
@@ -72,7 +76,7 @@ if not fmli_path or not expn_path:
 print(f"✅ Found FMLI file: {os.path.basename(fmli_path)}")
 print(f"✅ Found EXPN file: {os.path.basename(expn_path)}")
 
-# --- Step 5: Load and Process ---
+# --- Step 5: Load and Inspect ---
 fmli = pd.read_csv(fmli_path)
 expn = pd.read_csv(expn_path)
 
