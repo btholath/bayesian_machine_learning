@@ -79,11 +79,12 @@ for f in all_csvs:
         df = pd.read_csv(f)
         match = next((col for col in df.columns if col.upper() in spending_col_candidates), None)
         if match and "NEWID" in df.columns:
+            df[match] = pd.to_numeric(df[match], errors="coerce")
             totals = df.groupby("NEWID")[match].sum()
             if totals.notna().sum() > 10 and totals.sum() > 0:
                 expn_path = f
                 spending_col = match
-                print(f"✅ Using EXPN file: {os.path.basename(expn_path)} with column '{spending_col}'")
+                print(f"✅ Using EXPN file: {os.path.basename(f)} with column '{spending_col}'")
                 break
     except Exception:
         continue
@@ -96,12 +97,22 @@ fmli = pd.read_csv(fmli_path)
 expn = pd.read_csv(expn_path)
 
 # --- Step 8: Aggregate and Merge ---
+expn[spending_col] = pd.to_numeric(expn[spending_col], errors="coerce")
 expn_total = expn.groupby("NEWID")[spending_col].sum().reset_index()
 expn_total.columns = ["NEWID", "TOTAL_SPENDING"]
+
 merged = pd.merge(fmli, expn_total, on="NEWID")
+merged = merged.dropna(subset=["TOTAL_SPENDING"])
 
 # --- Step 9: Categorize and Clean ---
-merged["spending_category"] = pd.qcut(merged["TOTAL_SPENDING"], q=3, labels=["Low", "Medium", "High"])
+try:
+    merged["spending_category"] = pd.qcut(
+        merged["TOTAL_SPENDING"], q=3, labels=["Low", "Medium", "High"], duplicates="drop"
+    )
+except ValueError:
+    merged["spending_category"] = "Uncategorized"
+    print("⚠️ Could not create quantiles — 'TOTAL_SPENDING' values may be uniform.")
+
 final_df = merged[[
     "NEWID", "AGE_REF", "EDUCA2", "REGION", "INCOMEY2", "TOTAL_SPENDING", "spending_category"
 ]].dropna()
