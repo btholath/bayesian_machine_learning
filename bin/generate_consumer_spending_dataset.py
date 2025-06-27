@@ -58,45 +58,50 @@ with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
         with zip_ref.open(member) as source, open(target_path, "wb") as target:
             target.write(source.read())
 
-# --- Step 4: Locate Data Files ---
-print("🔍 Scanning for FMLI and EXPN files...")
+# --- Step 4: Locate CSV Files ---
+print("🔍 Scanning for CSV files in extracted data...")
 all_csvs = glob.glob(os.path.join(EXTRACT_DIR, "**", "*.csv"), recursive=True)
 print(f"📄 Found {len(all_csvs)} CSV files")
 
-# Improved file match logic
+# --- Step 5: Pick FMLI File ---
 fmli_path = next((f for f in all_csvs if "fmli" in os.path.basename(f).lower()), None)
-expn_path = next(
-    (f for f in all_csvs if any(key in os.path.basename(f).lower() for key in ["expn", "exp23"])),
-    None
-)
+if not fmli_path:
+    raise FileNotFoundError("❌ Could not locate FMLI CSV file.")
+print(f"✅ Using FMLI file: {os.path.basename(fmli_path)}")
 
-if not fmli_path or not expn_path:
-    raise FileNotFoundError("❌ Could not locate required FMLI or EXPN CSV files.")
+# --- Step 6: Find EXP File With Valid Spending Column ---
+spending_col_candidates = {"COST", "VALUE", "AMOUNT", "EXPNAMT"}
+expn_path = None
+spending_col = None
 
-print(f"✅ Found FMLI file: {os.path.basename(fmli_path)}")
-print(f"✅ Found EXPN file: {os.path.basename(expn_path)}")
+for f in all_csvs:
+    try:
+        df = pd.read_csv(f)
+        match = next((col for col in df.columns if col.upper() in spending_col_candidates), None)
+        if match and "NEWID" in df.columns:
+            totals = df.groupby("NEWID")[match].sum()
+            if totals.notna().sum() > 10 and totals.sum() > 0:
+                expn_path = f
+                spending_col = match
+                print(f"✅ Using EXPN file: {os.path.basename(expn_path)} with column '{spending_col}'")
+                break
+    except Exception:
+        continue
 
-# --- Step 5: Load and Inspect ---
+if not expn_path or not spending_col:
+    raise FileNotFoundError("❌ No valid EXPN file with usable numeric spending column found.")
+
+# --- Step 7: Load Full Data ---
 fmli = pd.read_csv(fmli_path)
 expn = pd.read_csv(expn_path)
 
-# Detect expenditure column
-print("🔎 Looking for spending column...")
-spending_col = next((col for col in expn.columns if col.upper() in {"COST", "VALUE", "AMOUNT", "EXPNAMT"}), None)
-if not spending_col:
-    raise ValueError("❌ No spending column found (COST, VALUE, AMOUNT, EXPNAMT).")
-print(f"✅ Using spending column: {spending_col}")
-
-# --- Step 6: Aggregate and Merge ---
+# --- Step 8: Aggregate and Merge ---
 expn_total = expn.groupby("NEWID")[spending_col].sum().reset_index()
 expn_total.columns = ["NEWID", "TOTAL_SPENDING"]
 merged = pd.merge(fmli, expn_total, on="NEWID")
 
-# --- Step 7: Categorize and Clean ---
-merged["spending_category"] = pd.qcut(
-    merged["TOTAL_SPENDING"], q=3, labels=["Low", "Medium", "High"]
-)
-
+# --- Step 9: Categorize and Clean ---
+merged["spending_category"] = pd.qcut(merged["TOTAL_SPENDING"], q=3, labels=["Low", "Medium", "High"])
 final_df = merged[[
     "NEWID", "AGE_REF", "EDUCA2", "REGION", "INCOMEY2", "TOTAL_SPENDING", "spending_category"
 ]].dropna()
@@ -111,7 +116,7 @@ final_df.rename(columns={
     "spending_category": "spending_class"
 }, inplace=True)
 
-# --- Step 8: Human-readable Mappings ---
+# --- Step 10: Label Mappings ---
 final_df["education_level"] = final_df["education_level"].map({
     31: "Less than HS", 32: "HS Graduate", 33: "Some College",
     34: "Associate’s Degree", 35: "Bachelor’s Degree", 36: "Advanced Degree"
@@ -121,6 +126,6 @@ final_df["region_code"] = final_df["region_code"].map({
     1: "Northeast", 2: "Midwest", 3: "South", 4: "West"
 })
 
-# --- Step 9: Save Output ---
+# --- Step 11: Export CSV ---
 final_df.to_csv(OUTPUT_CSV, index=False)
 print(f"🎉 consumer_spending.csv saved to: {OUTPUT_CSV}")
