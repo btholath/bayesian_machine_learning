@@ -27,7 +27,8 @@ EXTRACT_DIR = os.path.join(DATA_DIR, "intrvw23")
 OUTPUT_CSV = os.path.join(DATA_DIR, "consumer_spending.csv")
 CSV_DOWNLOAD_URL = "https://www.bls.gov/cex/pumd/data/csv/intrvw23.zip"
 
-TARGET_EXPN_FILES = ["rnt23.csv", "utp23.csv", "xpb23.csv"]
+# 🎯 Using known-valid files with 'COST' and 'NEWID'
+TARGET_EXPN_FILES = ["mtbi232.csv", "mtbi233.csv", "mtbi234.csv", "mtbi241.csv"]
 SPENDING_COLS = {"COST", "VALUE", "AMOUNT", "EXPNAMT", "DOLAMT", "VAL", "EXPNS"}
 
 # --- Download ZIP ---
