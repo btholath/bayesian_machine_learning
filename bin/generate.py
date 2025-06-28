@@ -1,3 +1,11 @@
+"""
+- ✅ Aggregated COST values from 4 quarterly mtbi* files
+- ✅ A clean merge with the FMLI demographics
+- ✅ Stratified spending tiers (Low, Medium, High) using quantiles
+- 🎯 A solid consumer_spending.csv output with 1,490 unique consumer units
+The class distribution also looks nicely varied — strong signal potential for downstream analysis, especially if you’re exploring income segmentation, regional behavioral shifts, or training supervised ML models.
+
+"""
 import os
 import zipfile
 import requests
