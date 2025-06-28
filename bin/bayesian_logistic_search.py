@@ -11,18 +11,18 @@ pipeline = Pipeline([
     ("prep", preprocessor),
     ("clf", LogisticRegression(
         solver="saga",
-        max_iter=5000, class_weight="balanced"
+        penalty="l1",
+        max_iter=5000,
+        class_weight="balanced",
+        random_state=42
     ))
 ])
 
-param_space = {
-    "clf__C": (1e-3, 100.0, "log-uniform"),
-    "clf__penalty": ["l2", "l1"]
-}
-
 search = BayesSearchCV(
     estimator=pipeline,
-    search_spaces=param_space,
+    search_spaces={
+        "clf__C": (1e-3, 100.0, "log-uniform")
+    },
     n_iter=20,
     cv=5,
     random_state=42,
