@@ -92,13 +92,15 @@ We recommend running at least 4 chains for robust computation of convergence dia
 22:13:42 | INFO | Sampling complete.
 22:13:42 | INFO | Summarizing posterior...
 
-🧾 Posterior Summary:
+# 🧾 Posterior Summary:
         mean    sd  hdi_3%  hdi_97%  mcse_mean  mcse_sd  ess_bulk  ess_tail  r_hat
-mu_a  11.42  0.03   11.37    11.48        0.0      0.0   6158.80   3115.27    1.0
-mu_b  11.70  0.05   11.61    11.79        0.0      0.0   6260.73   3408.33    1.0
-diff   0.28  0.06    0.17     0.39        0.0      0.0   6402.30   3561.83    1.0
-22:13:42 | INFO | Plotting and saving posterior difference...
-22:13:42 | INFO | Plot saved as 'posterior_difference.png'.
+- mu_a  11.42  0.03   11.37    11.48        0.0      0.0   6158.80   3115.27    1.0
+- mu_b  11.70  0.05   11.61    11.79        0.0      0.0   6260.73   3408.33    1.0
+- diff   0.28  0.06    0.17     0.39        0.0      0.0   6402.30   3561.83    1.0
+
+# 22:13:42 | INFO | Plotting and saving posterior difference...
+
+# 22:13:42 | INFO | Plot saved as 'posterior_difference.png'.
 (bayesian_env) @btholath ➜ /workspaces/bayesian_machine_learning (main) $ 
 
 You ran an A/B test that asked:
