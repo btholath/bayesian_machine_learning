@@ -150,3 +150,17 @@ The fatter and higher the hill? The more confident your model.
 # In plain English:
 “All the evidence says Group B consistently spends more — not just by a little, but with high confidence.”
 
+. What Do These Mean?
+| Concept | Meaning (Simple) | Example (Consumer Spending) | 
+| Joint distribution | How two or more variables vary together | Spending and income jointly | 
+| Marginal distribution | The distribution of one variable, ignoring the others | Just spending, regardless of income | 
+| Conditional distribution | The distribution of one variable given the value of another | Spending given income = high | 
+
+Here A = Spending and B = Income
+
+
+Marginal Distributions: p(A), p(B)
+Joint Distribution: p(A,B)
+Conditional Distribution: p(A|B), p(B|A)
+
+
